@@ -204,7 +204,7 @@
                     </div>
                     <h3>${item.name}</h3>
                     <div class="price-tag">${formatRupiah(item.price)}</div>
-                    <div class="${isHabis ? 'lbl-habis' : 'lbl-tersedia'}">${isHabis ? '❌ Stok Habis' : '✅ Tersedia'}</div>
+                    <div class="${isHabis ? 'lbl-habis' : 'lbl-tersedia'}">${isHabis ? '❌ Habis' : '✅ Tersedia'}</div>
                     <button class="add-btn ${sel?'selected':''}" onclick="toggleCart('${item.name}', ${item.price})" ${isHabis ? 'disabled' : ''}>
                         ${isHabis ? 'Kosong' : (sel ? '✓ Terpilih' : 'Pilih Menu')}
                     </button>
@@ -272,3 +272,4 @@
     </script>
 </body>
 </html>
+
