@@ -67,9 +67,11 @@
         .lbl-tersedia { font-size: 9px; font-weight: 700; color: #2D5A27; background: #e8f5e9; padding: 4px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
         .lbl-habis { font-size: 9px; font-weight: 700; color: #c62828; background: #ffebee; padding: 4px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
         
-        .add-btn { padding: 10px; background: #FF5733; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer; }
-        .add-btn.selected { background: #2D5A27; }
-        .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        /* TOMBOL & QUANTITY STYLING */
+        .add-btn { padding: 10px; background: #FF5733; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer; width: 100%; }
+        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: #2D5A27; border-radius: 10px; padding: 2px; }
+        .qty-btn { background: none; border: none; color: white; padding: 8px; font-weight: 800; cursor: pointer; width: 35px; }
+        .qty-val { color: white; font-weight: 800; font-size: 13px; }
         
         .lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: zoom-out; }
         .lightbox img { max-width: 90%; max-height: 80%; border-radius: 10px; }
@@ -165,7 +167,7 @@
         const sheetDB_URL = "https://sheetdb.io/api/v1/bmhy1qdhw6kh1"; 
 
         let menuData = [];
-        let cart = [];
+        let cart = []; // Menyimpan object {name, price, qty}
 
         async function fetchMenu() {
             try {
@@ -193,10 +195,27 @@
             const filtered = menuData.filter(i => f === 'semua' || i.cat === f);
             
             filtered.forEach(item => {
-                const sel = cart.some(c => c.name === item.name);
+                const cartItem = cart.find(c => c.name === item.name);
+                const qty = cartItem ? cartItem.qty : 0;
                 const isHabis = item.status === "Habis";
+
+                let actionHtml = '';
+                if (isHabis) {
+                    actionHtml = `<button class="add-btn" disabled>Kosong</button>`;
+                } else if (qty > 0) {
+                    actionHtml = `
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty('${item.name}', -1)">-</button>
+                            <span class="qty-val">${qty}</span>
+                            <button class="qty-btn" onclick="updateQty('${item.name}', 1)">+</button>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `<button class="add-btn" onclick="updateQty('${item.name}', 1)">Pilih Menu</button>`;
+                }
+
                 list.innerHTML += `
-                <div class="menu-card" style="${sel?'border:2.5px solid #2D5A27':''}">
+                <div class="menu-card" style="${qty > 0 ? 'border:2.5px solid #2D5A27' : ''}">
                     <div class="img-box" onclick="zoomImg('${item.img}')">
                         ${item.promo ? `<div class="promo-tag">${item.promo}</div>` : ''}
                         <img src="${item.img}" onerror="this.src='https://via.placeholder.com/250?text=Menu'">
@@ -205,25 +224,36 @@
                     <h3>${item.name}</h3>
                     <div class="price-tag">${formatRupiah(item.price)}</div>
                     <div class="${isHabis ? 'lbl-habis' : 'lbl-tersedia'}">${isHabis ? '❌ Habis' : '✅ Tersedia'}</div>
-                    <button class="add-btn ${sel?'selected':''}" onclick="toggleCart('${item.name}', ${item.price})" ${isHabis ? 'disabled' : ''}>
-                        ${isHabis ? 'Kosong' : (sel ? '✓ Terpilih' : 'Pilih Menu')}
-                    </button>
+                    ${actionHtml}
                 </div>`;
             });
         }
 
-        function toggleCart(n, p) {
-            const i = cart.findIndex(c => c.name === n);
-            if(i > -1) cart.splice(i,1); else cart.push({name: n, price: parseInt(p)});
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            document.getElementById('cart-bar').style.display = cart.length ? 'flex' : 'none';
-            document.getElementById('cart-count').innerText = cart.length + " Menu Terpilih";
-            document.getElementById('cart-total').innerText = "Total: " + formatRupiah(total);
+        function updateQty(name, change) {
+            const itemIndex = cart.findIndex(c => c.name === name);
+            if (itemIndex > -1) {
+                cart[itemIndex].qty += change;
+                if (cart[itemIndex].qty <= 0) cart.splice(itemIndex, 1);
+            } else if (change > 0) {
+                const menu = menuData.find(m => m.name === name);
+                cart.push({ name: name, price: parseInt(menu.price), qty: 1 });
+            }
             
-            // Re-render sesuai filter aktif agar status tombol tetap update
+            updateCartUI();
+            
             const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
             let cat = activeTab.includes('berat') ? 'makanan' : activeTab.includes('hits') ? 'jajanan' : activeTab.includes('manis') ? 'kue' : activeTab.includes('lain') ? 'lainnya' : 'semua';
             render(cat);
+        }
+
+        function updateCartUI() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            const bar = document.getElementById('cart-bar');
+            bar.style.display = cart.length ? 'flex' : 'none';
+            document.getElementById('cart-count').innerText = totalItems + " Item Terpilih";
+            document.getElementById('cart-total').innerText = "Total: " + formatRupiah(totalPrice);
         }
 
         function filterMenu(c, b) {
@@ -236,15 +266,15 @@
             const sekarang = new Date();
             const waktu = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             const pesan = `*STRUK PESANAN - Azzam Cemal-Cemil*\n` +
                           `--------------------------------------------\n` +
                           `Waktu: ${tanggal} | ${waktu} WIB\n` +
                           `--------------------------------------------\n\n` +
-                          cart.map(m => `👉 *${m.name}* (${formatRupiah(m.price)})`).join('\n') + 
+                          cart.map(m => `👉 *${m.name}* [x${m.qty}] (${formatRupiah(m.price * m.qty)})`).join('\n') + 
                           `\n\n--------------------------------------------\n` +
-                          `*TOTAL ESTIMASI: ${formatRupiah(total)}*\n` +
+                          `*TOTAL ESTIMASI: ${formatRupiah(totalPrice)}*\n` +
                           `--------------------------------------------\n` +
                           `_Mohon info ketersediaan stoknya ya Bunda Azzam._`;
             
@@ -272,4 +302,3 @@
     </script>
 </body>
 </html>
-
