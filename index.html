@@ -31,9 +31,13 @@
         .menu-container { padding: 0 4%; min-height: 300px; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .menu-card { background: white; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.03); position: relative; }
+        
+        /* FOTO DAN TAG PROMO */
         .img-box { width: 100%; height: 130px; border-radius: 15px; overflow: hidden; margin-bottom: 10px; cursor: zoom-in; position: relative; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .promo-tag { position: absolute; top: 8px; left: 8px; background: #FF5733; color: white; padding: 3px 10px; border-radius: 50px; font-size: 9px; font-weight: 700; z-index: 10; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
         .zoom-icon { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.4); color: white; padding: 3px 6px; border-radius: 4px; font-size: 9px; }
+        
         .menu-card h3 { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 2px; height: 38px; overflow: hidden; }
         .price-tag { font-size: 14px; font-weight: 700; color: #FF5733; margin-bottom: 8px; }
         .lbl-tersedia { font-size: 9px; font-weight: 700; color: #2D5A27; background: #e8f5e9; padding: 4px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
@@ -68,14 +72,14 @@
     
     <nav class="navbar">
         <div class="brand" style="display: flex; align-items: center; gap: 10px;">
-            <img src="logo.jpg" class="nav-logo" onerror="this.src='https://via.placeholder.com/50'">
+            <img src="Logo.jpg" class="nav-logo" onerror="this.src='https://via.placeholder.com/50'">
             <div class="logo">Azzam<span>CemalCemil</span></div>
         </div>
     </nav>
 
     <section class="hero">
         <div class="main-logo-container">
-            <img src="logo.jpg" onerror="this.src='https://via.placeholder.com/150'">
+            <img src="Logo.jpg" onerror="this.src='https://via.placeholder.com/150'">
         </div>
         <h1>Cita Rasa Rumahan,<br><span>Bikin Nagih Tiap Gigitan!</span> 🤤</h1>
         <p class="hero-desc">Sajian sepenuh hati untuk harimu yang istimewa.</p>
@@ -158,9 +162,12 @@
             filtered.forEach(item => {
                 const sel = cart.some(c => c.name === item.name);
                 const isHabis = item.status === "Habis";
+                const promo = item.promo; // Mengambil data dari kolom F
+                
                 list.innerHTML += `
                 <div class="menu-card" style="${sel?'border:2px solid #2D5A27':''}">
                     <div class="img-box" onclick="zoomImg('${item.img}')">
+                        ${promo ? `<div class="promo-tag">${promo}</div>` : ''}
                         <img src="${item.img}" onerror="this.src='https://via.placeholder.com/250?text=Menu'">
                         <div class="zoom-icon"><i class="fa fa-search-plus"></i> Zoom</div>
                     </div>
@@ -177,18 +184,12 @@
         function toggleCart(n, p) {
             const i = cart.findIndex(c => c.name === n);
             if(i > -1) cart.splice(i,1); else cart.push({name: n, price: parseInt(p)});
-            
             const total = cart.reduce((sum, item) => sum + item.price, 0);
             document.getElementById('cart-bar').style.display = cart.length ? 'flex' : 'none';
             document.getElementById('cart-count').innerText = cart.length + " Menu Terpilih";
             document.getElementById('cart-total').innerText = "Total: " + formatRupiah(total);
-            
             const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
-            let cat = 'semua';
-            if(activeTab.includes('berat')) cat = 'makanan';
-            else if(activeTab.includes('hits')) cat = 'jajanan';
-            else if(activeTab.includes('manis')) cat = 'kue';
-            else if(activeTab.includes('lain')) cat = 'lainnya';
+            let cat = activeTab.includes('berat') ? 'makanan' : activeTab.includes('hits') ? 'jajanan' : activeTab.includes('manis') ? 'kue' : activeTab.includes('lain') ? 'lainnya' : 'semua';
             render(cat);
         }
 
@@ -203,7 +204,6 @@
             const waktu = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             const total = cart.reduce((sum, item) => sum + item.price, 0);
-
             const pesan = `*STRUK PESANAN - Azzam Cemal-Cemil*\n` +
                           `--------------------------------------------\n` +
                           `Waktu: ${tanggal} | ${waktu} WIB\n` +
@@ -213,7 +213,6 @@
                           `*TOTAL ESTIMASI: ${formatRupiah(total)}*\n` +
                           `--------------------------------------------\n` +
                           `_Mohon info ketersediaan stoknya ya Bunda Azzam._`;
-            
             window.open(`https://wa.me/${noWA}?text=${encodeURIComponent(pesan)}`, '_blank');
         }
 
