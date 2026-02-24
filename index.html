@@ -12,20 +12,13 @@
         
         body { 
             background-image: url('background.jpg'); 
-            background-size: cover; 
-            background-attachment: fixed; 
-            background-position: center;
-            background-color: #f8f9fa; 
-            color: #333; 
-            padding-bottom: 140px; 
+            background-size: cover; background-attachment: fixed; background-position: center;
+            background-color: #f8f9fa; color: #333; padding-bottom: 140px; 
         }
 
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.65); 
-            z-index: -1;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.65); z-index: -1;
         }
 
         .datetime-container { background: #2D5A27; color: white; padding: 10px 0; text-align: center; font-size: 11px; font-weight: 600; }
@@ -35,13 +28,21 @@
         .logo { font-size: 18px; font-weight: 700; color: #2D5A27; }
         .logo span { color: #FF5733; }
         
-        /* PONDASI HERO ASLI */
         .hero { padding: 30px 5% 15px; text-align: center; }
         .main-logo-container { width: 110px; height: 110px; margin: 0 auto 15px; border-radius: 50%; border: 4px solid #fff; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
         .main-logo-container img { width: 100%; height: 100%; object-fit: cover; }
         .hero h1 { font-size: 24px; line-height: 1.2; color: #222; }
         .hero h1 span { color: #FF5733; }
         .hero-desc { font-size: 13px; color: #444; margin-top: 10px; padding: 0 8%; line-height: 1.6; font-weight: 600; }
+
+        /* SLIDE SHOW PROMO STYLING */
+        .promo-slider { margin: 10px 5% 25px; overflow: hidden; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: #eee; min-height: 100px; }
+        .slides { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { min-width: 100%; }
+        .slide img { width: 100%; height: 160px; object-fit: cover; display: block; }
+        .slide-dots { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 5px; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: 0.3s; }
+        .dot.active { background: #fff; width: 20px; border-radius: 10px; }
         
         .info-section { padding: 0 5% 20px; text-align: center; }
         .status-badge { display: inline-block; padding: 6px 18px; border-radius: 50px; font-size: 10px; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
@@ -67,7 +68,7 @@
         .lbl-tersedia { font-size: 9px; font-weight: 700; color: #2D5A27; background: #e8f5e9; padding: 4px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
         .lbl-habis { font-size: 9px; font-weight: 700; color: #c62828; background: #ffebee; padding: 4px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
         
-        /* TOMBOL & QUANTITY STYLING */
+        /* QUANTITY CONTROLS */
         .add-btn { padding: 10px; background: #FF5733; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer; width: 100%; }
         .qty-controls { display: flex; align-items: center; justify-content: space-between; background: #2D5A27; border-radius: 10px; padding: 2px; }
         .qty-btn { background: none; border: none; color: white; padding: 8px; font-weight: 800; cursor: pointer; width: 35px; }
@@ -77,7 +78,6 @@
         .lightbox img { max-width: 90%; max-height: 80%; border-radius: 10px; }
         .lightbox.active { display: flex; }
         
-        /* PONDASI DISCLAIMER & FOOTER ASLI */
         .disclaimer-container { padding: 30px 5% 10px; }
         .disclaimer-box { background: rgba(255, 249, 240, 0.9); border-left: 4px solid #FF5733; padding: 15px; border-radius: 12px; }
         .disclaimer-box h4 { font-size: 13px; color: #FF5733; margin-bottom: 8px; font-weight: 700; }
@@ -118,6 +118,11 @@
         <p class="hero-desc">Sajian sepenuh hati untuk harimu yang istimewa.</p>
     </section>
 
+    <div class="promo-slider" id="promo-container" style="display:none;">
+        <div class="slides" id="promoSlides"></div>
+        <div class="slide-dots" id="slideDots"></div>
+    </div>
+
     <div class="info-section">
         <div id="shop-status-badge" class="status-badge">Menghitung...</div>
         <p style="font-size: 11px; color: #444; font-weight: 600;">Senin-Sabtu (08.00-20.00) | Minggu (11.00-20.00)</p>
@@ -125,9 +130,9 @@
 
     <div class="filter-tabs">
         <button class="tab-btn active" onclick="filterMenu('semua', this)">Semua</button>
-        <button class="tab-btn" onclick="filterMenu('makanan', this)">Aneka Makanan</button>
+        <button class="tab-btn" onclick="filterMenu('makanan', this)">Makan Berat</button>
         <button class="tab-btn" onclick="filterMenu('jajanan', this)">Cemilan Hits</button>
-        <button class="tab-btn" onclick="filterMenu('kue', this)">Aneka Kue</button>
+        <button class="tab-btn" onclick="filterMenu('kue', this)">Kue & Manis</button>
         <button class="tab-btn" onclick="filterMenu('lainnya', this)">📦 Lain-lain</button>
     </div>
 
@@ -167,16 +172,62 @@
         const sheetDB_URL = "https://sheetdb.io/api/v1/bmhy1qdhw6kh1"; 
 
         let menuData = [];
-        let cart = []; // Menyimpan object {name, price, qty}
+        let cart = [];
 
-        async function fetchMenu() {
+        async function fetchData() {
             try {
                 const response = await fetch(sheetDB_URL);
                 menuData = await response.json();
                 document.getElementById('loading-text').style.display = 'none';
+                
+                // Cek status toko dari baris pertama
                 checkStatus(menuData[0].toko); 
+                
+                // Render Menu Utama
                 render();
-            } catch (error) { document.getElementById('loading-text').innerText = "Gagal memuat!"; }
+                
+                // Render Promo Slideshow (Sinkron Sheet)
+                initPromo(menuData);
+            } catch (error) { 
+                document.getElementById('loading-text').innerText = "Gagal memuat data!"; 
+            }
+        }
+
+        // LOGIKA SLIDE SHOW SINKRON GOOGLE SHEET
+        function initPromo(data) {
+            const promoItems = data.filter(i => i.promo_img && i.promo_img !== "");
+            if (promoItems.length === 0) return;
+
+            const container = document.getElementById('promo-container');
+            const slider = document.getElementById('promoSlides');
+            const dotsCont = document.getElementById('slideDots');
+            
+            container.style.display = 'block';
+            slider.innerHTML = "";
+            dotsCont.innerHTML = "";
+
+            promoItems.forEach((item, i) => {
+                slider.innerHTML += `<div class="slide"><img src="${item.promo_img}" onerror="this.src='https://via.placeholder.com/600x200?text=Promo+Azzam'"></div>`;
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (i === 0) dot.classList.add('active');
+                dotsCont.appendChild(dot);
+            });
+
+            startAutoSlide(promoItems.length);
+        }
+
+        let currentSlide = 0;
+        function startAutoSlide(total) {
+            if (total <= 1) return;
+            const slider = document.getElementById('promoSlides');
+            const dots = document.querySelectorAll('.dot');
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % total;
+                slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+                dots.forEach(d => d.classList.remove('active'));
+                dots[currentSlide].classList.add('active');
+            }, 4000);
         }
 
         function formatRupiah(angka) {
@@ -192,27 +243,21 @@
         function render(f = 'semua') {
             const list = document.getElementById('menu-list');
             list.innerHTML = "";
-            const filtered = menuData.filter(i => f === 'semua' || i.cat === f);
+            const filtered = menuData.filter(i => (f === 'semua' || i.cat === f) && i.name); // Pastikan ada nama menu
             
             filtered.forEach(item => {
                 const cartItem = cart.find(c => c.name === item.name);
                 const qty = cartItem ? cartItem.qty : 0;
                 const isHabis = item.status === "Habis";
 
-                let actionHtml = '';
-                if (isHabis) {
-                    actionHtml = `<button class="add-btn" disabled>Kosong</button>`;
-                } else if (qty > 0) {
-                    actionHtml = `
+                let actionHtml = isHabis ? `<button class="add-btn" disabled>Kosong</button>` : 
+                    (qty > 0 ? `
                         <div class="qty-controls">
                             <button class="qty-btn" onclick="updateQty('${item.name}', -1)">-</button>
                             <span class="qty-val">${qty}</span>
                             <button class="qty-btn" onclick="updateQty('${item.name}', 1)">+</button>
                         </div>
-                    `;
-                } else {
-                    actionHtml = `<button class="add-btn" onclick="updateQty('${item.name}', 1)">Pilih Menu</button>`;
-                }
+                    ` : `<button class="add-btn" onclick="updateQty('${item.name}', 1)">Pilih Menu</button>`);
 
                 list.innerHTML += `
                 <div class="menu-card" style="${qty > 0 ? 'border:2.5px solid #2D5A27' : ''}">
@@ -238,9 +283,7 @@
                 const menu = menuData.find(m => m.name === name);
                 cart.push({ name: name, price: parseInt(menu.price), qty: 1 });
             }
-            
             updateCartUI();
-            
             const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
             let cat = activeTab.includes('berat') ? 'makanan' : activeTab.includes('hits') ? 'jajanan' : activeTab.includes('manis') ? 'kue' : activeTab.includes('lain') ? 'lainnya' : 'semua';
             render(cat);
@@ -249,7 +292,6 @@
         function updateCartUI() {
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
             const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            
             const bar = document.getElementById('cart-bar');
             bar.style.display = cart.length ? 'flex' : 'none';
             document.getElementById('cart-count').innerText = totalItems + " Item Terpilih";
@@ -266,7 +308,7 @@
             const sekarang = new Date();
             const waktu = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             const pesan = `*STRUK PESANAN - Azzam Cemal-Cemil*\n` +
                           `--------------------------------------------\n` +
@@ -274,7 +316,7 @@
                           `--------------------------------------------\n\n` +
                           cart.map(m => `👉 *${m.name}* [x${m.qty}] (${formatRupiah(m.price * m.qty)})`).join('\n') + 
                           `\n\n--------------------------------------------\n` +
-                          `*TOTAL ESTIMASI: ${formatRupiah(totalPrice)}*\n` +
+                          `*TOTAL ESTIMASI: ${formatRupiah(total)}*\n` +
                           `--------------------------------------------\n` +
                           `_Mohon info ketersediaan stoknya ya Bunda Azzam._`;
             
@@ -298,8 +340,8 @@
         }
 
         setInterval(updateDateTime, 1000);
-        updateDateTime(); fetchMenu();
+        updateDateTime(); 
+        fetchData();
     </script>
 </body>
 </html>
-
